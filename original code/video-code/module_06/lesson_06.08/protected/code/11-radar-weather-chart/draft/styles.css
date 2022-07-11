@@ -1,0 +1,62 @@
+/* Import and use the Inter font https://rsms.me/inter/ */
+@import url('https://rsms.me/inter/inter.css');
+html { font-family: 'Inter', sans-serif; }
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2em 2em;
+    font-family: 'Inter var', sans-serif;
+    font-size: 16px;
+    color: #34495e;
+    background: #f8f9fa;
+}
+
+.title {
+    position: relative;
+    width: 600px;
+    margin-top: 1.3em;
+    margin-bottom: 0.3em;
+    line-height: 1.2em;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    font-feature-settings: 'tnum' 1;
+}
+
+.grid-line {
+    fill: none;
+    stroke: #dadadd;
+}
+
+.tick-label {
+    dominant-baseline: middle;
+    fill: #8395a7;
+    font-size: 0.7em;
+    font-weight: 900;
+}
+
+.tick-label-temperature {
+    fill: #8395a7;
+    opacity: 0.7;
+    font-size: 0.7em;
+    dominant-baseline: middle;
+}
+
+.freezing-circle {
+    fill: #00d2d3;
+    opacity: 0.15;
+}
+
+.uv-line {
+    stroke: #feca57;
+   stroke-width: 2;
+}
+
+.cloud-dot {
+    fill: #c8d6e5;
+    opacity: 0.6;
+}

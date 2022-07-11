@@ -1,0 +1,32 @@
+{
+  "name": "fullstack-d3",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "start": "sirv public --port 3000"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^2.3.4",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-svelte": "^7.0.0",
+    "rollup-plugin-terser": "^7.0.0",
+    "sirv-cli": "^0.3.1"
+  },
+  "dependencies": {
+    "d3": "^5.9.1",
+    "svelte": "^3.0.0"
+  },
+  "newline": {
+    "codesandbox": {
+      "id": "https://codesandbox.io/s/o8z0i"
+    }
+  },
+  "keywords": [],
+  "title": "Module 8, Lesson 12: D3 + Svelte"
+}
