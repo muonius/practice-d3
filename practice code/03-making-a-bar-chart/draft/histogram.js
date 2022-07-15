@@ -79,6 +79,19 @@ async function drawBars() {
     .attr("height", (d) => dimensions.boundedHeight - yScale(yAccessor(d)))
     .attr("fill", "cornflowerblue");
   //you don't need xAccessor because d.x1 and d.x0 are created in the bins dataset already
+
+  //6. Add labels
+  const barText = binGroups
+    .filter(yAccessor)
+    .append("text")
+    .attr("x", (d) => xScale(d.x0) + (xScale(d.x1) - xScale(d.x0)) / 2)
+    .attr("y", (d) => yScale(yAccessor(d)) - 5)
+    .text(yAccessor)
+    .style("text-anchor", "middle")
+    .style("fill", "#666")
+    .style("font-size", "12px")
+    .style("font-family", "sans-serif");
+  //if length is 0, do not show value
 }
 
 drawBars();
