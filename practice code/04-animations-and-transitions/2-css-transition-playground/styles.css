@@ -1,23 +1,23 @@
 .box {
-    background: cornflowerblue;
-    height: 100px;
-    width: 100px;
-    /* transition: transform 2s steps(6),
+  background: cornflowerblue;
+  height: 100px;
+  width: 100px;
+  /* transition: transform 2s steps(6),
                          background 1s ease-out; */
-    transition: transform 2s ease-out,
-                         background 1s ease-out;
-                         /* easing is very powerful  */
-    /* transition short hand: name of the property, duration, optional */
-    /* transition-duration: 2000ms; */
 
-    /* transition: transform 2s; */
-    /* transition-property: transform;  which to change transform or property */
-    /* transition-property: all; */
-    /* transition-property: background; */
+  transition: transform 2s ease-out, background 1s ease-out;
+  /* this is a shorthand, property, duration, and easing */
+  /* easing is very powerful  */
+  /* transition short hand: name of the property, duration, optional */
+  /* transition-duration: 2000ms; */
 
+  /* transition: transform 2s; */
+  /* transition-property: transform;  which only changes transform property, so color changes immediately but position changes with 2 sec duration */
+  /* transition-property: all; */
+  /* transition-property: background; */
 }
 
 .box:hover {
-    background: yellowgreen;
-    transform: translateX(300px);
+  background: yellowgreen;
+  transform: translateX(300px);
 }
