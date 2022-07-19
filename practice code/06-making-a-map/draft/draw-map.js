@@ -3,7 +3,7 @@ async function drawMap() {
   // console.log(countryShapes);
   //************1. Create Accessors */
   const countryNameAccessor = (d) => d.properties["NAME"];
-  const countryIDAccessor = (d) => d.properties["ADMI0_A3_IS"];
+  const countryIdAccessor = (d) => d.properties["ADMI0_A3_IS"];
   // console.log(countryNameAccessor(countryShapes.features[0]));
 
   const dataset = await d3.csv("./../data_bank_data.csv");
@@ -62,5 +62,41 @@ async function drawMap() {
       "transform",
       `translate(${dimensions.margin.left}px,${dimensions.margin.top}px)`
     );
+
+  //*************5. Create Scale */
+  const metricValues = Object.values(metricDataByCountry);
+  const metricValueExtent = d3.extent(metricValues);
+
+  // add color scale for value
+  const maxChange = d3.max([-metricValueExtent[0], metricValueExtent[1]]);
+  const colorScale = d3
+    .scaleLinear()
+    .domain([-maxChange, 0, maxChange])
+    .range(["indigo", "white", "darkgreen"]);
+
+  // **************6. Draw Data
+
+  const earth = bounds
+    .append("path")
+    .attr("class", "earth")
+    .attr("d", pathGenerator(sphere));
+
+  const graticuleJson = d3.geoGraticule10();
+  const graticule = bounds
+    .append("path")
+    .attr("class", "graticule")
+    .attr("d", pathGenerator(graticuleJson));
+
+  const countries = bounds
+    .selectAll(".country")
+    .data(countryShapes.features)
+    .join("path")
+    .attr("class", "country")
+    .attr("d", pathGenerator)
+    .attr("fill", (d) => {
+      const metricValue = metricDataByCountry[countryIdAccessor(d)];
+      if (typeof metricValue == "undefined") return "#e2e6e9";
+      return colorScale(metricValue);
+    });
 }
 drawMap();
