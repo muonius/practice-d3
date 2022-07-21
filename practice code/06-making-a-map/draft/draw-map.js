@@ -3,7 +3,7 @@ async function drawMap() {
   // console.log(countryShapes);
   //************1. Create Accessors */
   const countryNameAccessor = (d) => d.properties["NAME"];
-  const countryIdAccessor = (d) => d.properties["ADMI0_A3_IS"];
+  const countryIdAccessor = (d) => d.properties["ADM0_A3_IS"];
   // console.log(countryNameAccessor(countryShapes.features[0]));
 
   const dataset = await d3.csv("./../data_bank_data.csv");
@@ -15,8 +15,13 @@ async function drawMap() {
   let metricDataByCountry = {};
   dataset.forEach((d) => {
     if (d["Series Name"] != metric) return;
-    metricDataByCountry[d["Country Code"]] = +d["2017[YR2017]"] || 0;
+    metricDataByCountry[d["Country Code"]] = +d["2017 [YR2017]"] || 0;
   });
+
+  // const metric = "Net migration"
+  // const metric = "International tourism, receipts (current US$)"
+  // const metric = "Population density (people per sq. km of land area)"
+
   // console.log(metricDataByCountry);
 
   // **************3. Dimensions
@@ -64,10 +69,12 @@ async function drawMap() {
     );
 
   //*************5. Create Scale */
-  const metricValues = Object.values(metricDataByCountry);
-  const metricValueExtent = d3.extent(metricValues);
+  const metricValue = Object.values(metricDataByCountry);
+  const metricValueExtent = d3.extent(metricValue);
 
   // add color scale for value
+  //get absolute max value
+
   const maxChange = d3.max([-metricValueExtent[0], metricValueExtent[1]]);
   const colorScale = d3
     .scaleLinear()
@@ -98,5 +105,122 @@ async function drawMap() {
       if (typeof metricValue == "undefined") return "#e2e6e9";
       return colorScale(metricValue);
     });
+
+  //****************7. Draw Peripherals */
+  const legendGroup = wrapper
+    .append("g")
+    .style(
+      "transform",
+      `translate(${100}px,${
+        dimensions.width < 800
+          ? dimensions.boundedHeight - 30
+          : dimensions.boundedHeight * 0.5
+      }px)`
+    );
+
+  const legendTitle = legendGroup
+    .append("text")
+    .attr("y", -23)
+    .attr("class", "legend-title")
+    .text("Population growth");
+
+  const legendByline = legendGroup
+    .append("text")
+    .attr("y", -7)
+    .attr("class", "legend-byline")
+    .text("Percent change in 2017");
+
+  const defs = wrapper.append("defs");
+
+  const legendGradientId = "legend-gradient";
+
+  const gradient = defs
+    .append("linearGradient")
+    .attr("id", legendGradientId)
+    .selectAll("stop")
+    .data(colorScale.range())
+    .join("stop")
+    .attr("stop-color", (d) => d)
+    .attr(
+      "offset",
+      (d, i) =>
+        `${
+          (i * 100) / 2 // 2 is one less than our array's length
+        }%`
+    );
+
+  const legendWidth = 120;
+  const legendHeight = 16;
+  const legendGradient = legendGroup
+    .append("rect")
+    .attr("x", -legendWidth / 2)
+    .attr("height", legendHeight)
+    .attr("width", legendWidth)
+    .style("fill", `url(#${legendGradientId})`);
+
+  // console.log(colorScale.range());
+
+  const legendValueRight = legendGroup
+    .append("text")
+    .attr("class", "legend-value")
+    .attr("x", legendWidth / 2 + 10)
+    .attr("y", legendHeight / 2)
+    .text(`${d3.format(".1f")(maxChange)}%`);
+
+  const legendValueLeft = legendGroup
+    .append("text")
+    .attr("class", "legend-value")
+    .attr("x", -legendWidth / 2 - 10)
+    .attr("y", legendHeight / 2)
+    .text(`${d3.format(".1f")(-maxChange)}%`)
+    .style("text-anchor", "end");
+
+  //**************8. Add location */
+  navigator.geolocation.getCurrentPosition((myPosition) => {
+    const [x, y] = projection([
+      myPosition.coords.longitude,
+      myPosition.coords.latitude,
+    ]);
+    const myLocation = bounds
+      .append("circle")
+      .attr("class", "my-location")
+      .attr("cx", x)
+      .attr("cy", y)
+      .attr("r", 0)
+      .transition()
+      .duration(500)
+      .attr("r", 10);
+  });
+
+  //**************9. Setup Interactions */
+
+  countries.on("mouseenter", onMouseEnter).on("mouseleave", onMouseLeave);
+
+  const tooltip = d3.select("#tooltip");
+
+  function onMouseEnter(e, datum) {
+    tooltip.style("opacity", 1);
+    // console.log(e, datum);
+
+    const metricValue = metricDataByCountry[countryIdAccessor(datum)];
+
+    tooltip.select("#country").text(countryNameAccessor(datum));
+
+    tooltip.select("#value").text(`${d3.format(",.2f")(metricValue || 0)}%`);
+
+    const [centerX, centerY] = pathGenerator.centroid(datum);
+
+    const x = centerX + dimensions.margin.left;
+    const y = centerY + dimensions.margin.top;
+
+    tooltip.style(
+      "transform",
+      `translate(` + `calc( -50% + ${x}px),` + `calc(-100% + ${y}px)` + `)`
+    );
+  }
+
+  function onMouseLeave() {
+    tooltip.style("opacity", 0);
+  }
 }
 drawMap();
