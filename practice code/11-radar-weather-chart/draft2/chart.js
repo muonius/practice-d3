@@ -50,6 +50,20 @@ async function drawChart() {
       }px)`
     );
 
+  const defs = wrapper.append("defs");
+
+  const gradientID = "temperature-gradient";
+
+  const gradient = defs.append("radialGradient").attr("id", gradientID);
+
+  const numberOfStops = 10;
+  const gradientColorScale = d3.interpolateYlOrRd;
+  d3.range(numberOfStops).forEach((i) => {
+    gradient
+      .append("stop")
+      .attr("offset", `${(i * 100) / (numberOfStops - 1)}%`)
+      .attr("stop-color", gradientColorScale(i / (numberOfStops - 1)));
+  });
   // 4. Create scales
   const angleScale = d3
     .scaleTime()
@@ -78,7 +92,7 @@ async function drawChart() {
   // 6. Draw peripherals
   const peripherals = bounds.append("g");
   const months = d3.timeMonth.range(...angleScale.domain());
-
+  console.log(months);
   const getCoordinatesForAngle = (angle, offset = 1) => [
     Math.cos(angle - Math.PI / 2) * dimensions.boundedRadius * offset,
     Math.sin(angle - Math.PI / 2) * dimensions.boundedRadius * offset,
@@ -135,6 +149,22 @@ async function drawChart() {
   });
   // 5. Draw data
 
+  const freezingCircle = bounds
+    .append("circle")
+    .attr("r", radiusScale(32))
+    .attr("class", "freezing-circle");
+
+  const areaGenerator = d3
+    .areaRadial()
+    .angle((d) => angleScale(dateAccessor(d)))
+    .innerRadius((d) => radiusScale(temperatureMinAccessor(d)))
+    .outerRadius((d) => radiusScale(temperatureMaxAccessor(d)));
+
+  const area = bounds
+    .append("path")
+    .attr("d", areaGenerator(dataset))
+    .style("fill", `url(#${gradientID})`);
+  //style can't be overwritten in external css style
   // 7. Set up interactions
 }
 drawChart();
