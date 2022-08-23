@@ -81,22 +81,39 @@ async function drawChart() {
     .range([0, dimensions.boundedRadius])
     .nice();
 
-  const getXFromDataPoint = (d, offset = 1.4) => {
+  const getXFromDataPoint = (d, offset = 1.4) =>
     getCoordinatesForAngle(angleScale(dateAccessor(d)), offset)[0];
-  };
 
-  const getYFromDataPoint = (d, offset = 1.4) => {
+  const getYFromDataPoint = (d, offset = 1.4) =>
     getCoordinatesForAngle(angleScale(dateAccessor(d)), offset)[1];
-  };
+
+  const cloudRadiusScale = d3
+    .scaleSqrt()
+    .domain(d3.extent(dataset, cloudAccessor))
+    .range([1, 10]);
+
+  const precipitationRadiusScale = d3
+    .scaleSqrt()
+    .domain(d3.extent(dataset, precipitationProbabilityAccessor))
+    .range([0, 8]);
+
+  const precipitationTypes = ["rain", "sleet", "snow"];
+
+  const precipitationTypeColorScale = d3
+    .scaleOrdinal()
+    .domain(precipitationTypes)
+    .range(["#54a0ff", "#636e72", "#b2bec3"]);
 
   // 6. Draw peripherals
   const peripherals = bounds.append("g");
   const months = d3.timeMonth.range(...angleScale.domain());
   console.log(months);
+
   const getCoordinatesForAngle = (angle, offset = 1) => [
     Math.cos(angle - Math.PI / 2) * dimensions.boundedRadius * offset,
     Math.sin(angle - Math.PI / 2) * dimensions.boundedRadius * offset,
   ];
+
   months.forEach((month) => {
     const angle = angleScale(month);
     const [x, y] = getCoordinatesForAngle(angle, 1);
@@ -165,6 +182,102 @@ async function drawChart() {
     .attr("d", areaGenerator(dataset))
     .style("fill", `url(#${gradientID})`);
   //style can't be overwritten in external css style
+
+  const uvIndexThreshold = 8;
+  const uvGroup = bounds.append("g");
+  const uvOffset = 0.95;
+  const highUvDays = uvGroup
+    .selectAll("line")
+    .data(dataset.filter((d) => uvAccessor(d) > uvIndexThreshold))
+    .join("line")
+    .attr("class", "uv-line")
+    .attr("x1", (d) => getXFromDataPoint(d, uvOffset))
+    .attr("x2", (d) => getXFromDataPoint(d, uvOffset + 0.1))
+    .attr("y1", (d) => getYFromDataPoint(d, uvOffset))
+    .attr("y2", (d) => getYFromDataPoint(d, uvOffset + 0.1));
+
+  const cloudGroup = bounds.append("g");
+  const cloudOffset = 1.27; // unit of radius of the circle
+  const cloudDots = cloudGroup
+    .selectAll("circle")
+    .data(dataset)
+    .join("circle")
+    .attr("cx", (d) => getXFromDataPoint(d, cloudOffset))
+    .attr("cy", (d) => getYFromDataPoint(d, cloudOffset))
+    .attr("r", (d) => cloudRadiusScale(cloudAccessor(d)))
+    .attr("class", "cloud-dot");
+
+  const precipitationGroup = bounds.append("g");
+  const precipitationOffset = 1.14; // unit of radius of the circle
+  const precipitationDots = precipitationGroup
+    .selectAll("circle")
+    .data(dataset)
+    .join("circle")
+    .attr("cx", (d) => getXFromDataPoint(d, precipitationOffset))
+    .attr("cy", (d) => getYFromDataPoint(d, precipitationOffset))
+    .attr("r", (d) =>
+      precipitationRadiusScale(precipitationProbabilityAccessor(d))
+    )
+    .style("fill", (d) =>
+      precipitationTypeColorScale(precipitationTypeAccessor(d))
+    )
+    .attr("class", "cloud-dot");
+
+  // draw Annotation
+
+  const annotationGroup = bounds.append("g");
+
+  const drawAnnotation = (angle, offset, text) => {
+    const [x1, y1] = getCoordinatesForAngle(angle, offset);
+    const [x2, y2] = getCoordinatesForAngle(angle, 1.6);
+
+    annotationGroup
+      .append("line")
+      .attr("class", "annotation-line")
+      .attr("x1", x1)
+      .attr("x2", x2)
+      .attr("y1", y1)
+      .attr("y2", y2);
+
+    annotationGroup
+      .append("text")
+      .attr("class", "annotation-text")
+      .attr("x", x2 + 6)
+      .attr("y", y2)
+      .text(text);
+  };
+
+  drawAnnotation(Math.PI * 0.23, cloudOffset, "Cloud Cover");
+  drawAnnotation(Math.PI * 0.26, precipitationOffset, "Precipitation");
+  drawAnnotation(
+    Math.PI * 0.734,
+    uvOffset,
+    `UV index over ${uvIndexThreshold}`
+  );
+  drawAnnotation(Math.PI * 0.7, 0.5, "Temperature");
+  drawAnnotation(
+    Math.PI * 0.9,
+    radiusScale(32) / dimensions.boundedRadius,
+    "Freezing Temperature"
+  );
+
+  precipitationTypes.forEach((precipitationType, index) => {
+    const labelCoordinates = getCoordinatesForAngle(Math.PI * 0.26, 1.6);
+    annotationGroup
+      .append("circle")
+      .attr("cx", labelCoordinates[0] + 15)
+      .attr("cy", labelCoordinates[1] + 16 * (index + 1))
+      .attr("r", 4)
+      .style("opacity", 0.7)
+      .attr("fill", precipitationTypeColorScale(precipitationType));
+    annotationGroup
+      .append("text")
+      .attr("x", labelCoordinates[0] + 25)
+      .attr("y", labelCoordinates[1] + 16 * (index + 1))
+      .text(precipitationType)
+      .attr("class", "annotation-text");
+  });
+
   // 7. Set up interactions
 }
 drawChart();
