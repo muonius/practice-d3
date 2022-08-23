@@ -113,3 +113,7 @@ svg {
   z-index: 10;
   pointer-events: none;
 }
+
+.wrapper {
+  position: relative;
+}

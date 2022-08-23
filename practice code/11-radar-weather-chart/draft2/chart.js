@@ -279,5 +279,43 @@ async function drawChart() {
   });
 
   // 7. Set up interactions
+
+  const listenerCircle = bounds
+    .append("circle")
+    .attr("r", dimensions.width / 2)
+    .attr("class", "listener-circle")
+    .on("mousemove", onMouseMove)
+    .on("mouseleave", onMouseLeave);
+
+  const tooltip = d3.select("#tooltip");
+  function onMouseMove(e) {
+    const [x, y] = d3.pointer(e);
+
+    const getAngleFromCoordinates = (x, y) => {
+      Math.atan2(y, x);
+    };
+    let angle = getAngleFromCoordinates(x, y) + Math.PI / 2;
+    if (angle < 0) angle = Math.PI * 2 + angle;
+
+    const tooltipArcGenerator = d3
+      .arc()
+      .innerRadius(0)
+      .outerRadius(dimensions.boundedRadius * 1.6)
+      .startAngle(angle - 0.015)
+      .endAngle(angle + 0.015);
+
+    const tooltipLine = bounds
+      .append("path")
+      .attr("class", "tooltip-line")
+      .attr("d", tooltipArcGenerator);
+
+    tooltipLine.style("opacity", 1);
+    tooltip.style("opacity", 1);
+    // style overwrites CSS
+  }
+  function onMouseLeave() {
+    tooltipLine.style("opacity", 0);
+    tooltip.style("opacity", 0);
+  }
 }
 drawChart();
